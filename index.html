@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Laboratorio Interactivo de IA: Embeddings, Transformers y Chatbot en JS | Campuslands</title>
+  
+  <!-- Favicon SVG oficial -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%235E3AE2' stroke-width='3'><circle cx='24' cy='24' r='18'/><path d='M14 26C14 20.4772 18.4772 16 24 16C29.5228 16 34 20.4772 34 26' stroke-linecap='round'/><path d='M16 28H32' stroke-linecap='round'/><circle cx='8' cy='24' r='3' fill='%232CAAFF'/><circle cx='40' cy='24' r='3' fill='%235E3AE2'/></svg>">
+
+  <!-- Fuentes Oficiales: Plus Jakarta Sans y JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN con configuración personalizada Campuslands -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            campus: {
+              purple: '#5E3AE2',
+              'purple-dark': '#4728BF',
+              'purple-glow': 'rgba(94, 58, 226, 0.35)',
+              blue: '#000087',
+              dark: '#08172E',
+              darker: '#050D1A',
+              card: '#0D1E38',
+              'card-border': '#1E355B',
+              cyan: '#2CAAFF',
+              'cyan-glow': 'rgba(44, 170, 255, 0.3)',
+              yellow: '#F4B422',
+              emerald: '#00AA80',
+              neutral: '#E4E4DB'
+            }
+          },
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #050D1A;
+      color: #F8FAFC;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* Estilos de scrollbar personalizados */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #08172E;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1E355B;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #5E3AE2;
+    }
+    /* Efecto Glow */
+    .glow-purple {
+      box-shadow: 0 0 35px -5px rgba(94, 58, 226, 0.4);
+    }
+    .glow-cyan {
+      box-shadow: 0 0 30px -5px rgba(44, 170, 255, 0.35);
+    }
+    /* Animación de pulso sutil */
+    @keyframes pulse-subtle {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.85; transform: scale(1.02); }
+    }
+    .animate-pulse-subtle {
+      animation: pulse-subtle 3s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-[#050D1A] text-slate-100 selection:bg-[#5E3AE2] selection:text-white">
+
+  <!-- HEADER OFICIAL CAMPUSLANDS -->
+  <header class="sticky top-0 z-50 bg-[#08172E]/90 backdrop-blur-md border-b border-[#1E355B] transition-all">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 py-3 flex items-center justify-between gap-4">
+      
+      <!-- Logotipo & Título -->
+      <div class="flex items-center gap-3.5">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#5E3AE2] to-[#2CAAFF] p-0.5 flex items-center justify-center shadow-lg shadow-purple-500/20">
+          <div class="w-full h-full bg-[#08172E] rounded-[10px] flex items-center justify-center">
+            <svg class="w-6 h-6 text-[#2CAAFF]" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.8">
+              <circle cx="24" cy="24" r="18"/>
+              <path d="M14 26C14 20.4772 18.4772 16 24 16C29.5228 16 34 20.4772 34 26" stroke-linecap="round"/>
+              <path d="M16 28H32" stroke-linecap="round"/>
+              <circle cx="8" cy="24" r="2.5" fill="currentColor"/>
+              <circle cx="40" cy="24" r="2.5" fill="#5E3AE2"/>
+            </svg>
+          </div>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-extrabold text-lg tracking-tight text-white">campuslands</span>
+            <span class="px-2 py-0.5 text-[11px] font-black uppercase tracking-wider bg-[#5E3AE2]/20 border border-[#5E3AE2]/60 text-[#2CAAFF] rounded-md">
+              IA Academy
+            </span>
+          </div>
+          <p class="text-xs text-slate-400 font-medium hidden sm:block">Laboratorio Interactivo · De la Teoría al Código en JavaScript</p>
+        </div>
+      </div>
+
+      <!-- Barra de Progreso y Navegación de Módulos -->
+      <div class="flex items-center gap-2 sm:gap-4">
+        <!-- Indicador de Progreso -->
+        <div class="hidden md:flex flex-col items-end">
+          <div class="text-[11px] font-semibold text-slate-400">Progreso del Laboratorio</div>
+          <div class="w-32 h-2 bg-slate-800 rounded-full overflow-hidden mt-1 border border-slate-700/60">
+            <div id="progress-bar-fill" class="h-full bg-gradient-to-r from-[#5E3AE2] to-[#2CAAFF] w-1/6 transition-all duration-300"></div>
+          </div>
+        </div>
+
+        <!-- Botones de Navegación Rápida -->
+        <div class="flex items-center gap-1.5 bg-[#0D1E38] p-1 rounded-xl border border-[#1E355B]">
+          <button id="btn-prev-tab" class="p-1.5 hover:bg-[#1E355B] text-slate-400 hover:text-white rounded-lg transition" title="Módulo Anterior (Tecla Flecha Izquierda)">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <span id="tab-indicator" class="text-xs font-mono font-bold text-[#2CAAFF] px-2">1/6</span>
+          <button id="btn-next-tab" class="p-1.5 hover:bg-[#1E355B] text-slate-400 hover:text-white rounded-lg transition" title="Módulo Siguiente (Tecla Flecha Derecha)">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+
+        <!-- Enlace a GitHub del Ejercicio -->
+        <a href="https://github.com/anndreloopez012/campuslands-ia-embeddings-chat-javascript" target="_blank" rel="noopener noreferrer" class="p-2 hover:bg-[#0D1E38] text-slate-400 hover:text-white rounded-xl border border-transparent hover:border-[#1E355B] transition flex items-center gap-1 text-xs font-semibold">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          <span class="hidden lg:inline">Repo</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Menú de Pestañas Interactivas (Sticky Tab Bar) -->
+    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex overflow-x-auto gap-2 py-2 border-t border-[#1E355B]/60 scrollbar-none" id="tabs-container">
+      <button onclick="switchTab(1)" class="tab-btn active px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 whitespace-nowrap bg-[#5E3AE2] text-white shadow-lg shadow-purple-500/20" data-tab="1">
+        <span>💡</span> 1. La Chispa de la IA
+      </button>
+      <button onclick="switchTab(2)" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 whitespace-nowrap text-slate-400 hover:text-white hover:bg-[#0D1E38]" data-tab="2">
+        <span>🧭</span> 2. Embeddings 2D
+      </button>
+      <button onclick="switchTab(3)" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 whitespace-nowrap text-slate-400 hover:text-white hover:bg-[#0D1E38]" data-tab="3">
+        <span>⚡</span> 3. Transformers & Atención
+      </button>
+      <button onclick="switchTab(4)" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 whitespace-nowrap text-slate-400 hover:text-white hover:bg-[#0D1E38]" data-tab="4">
+        <span>🛠️</span> 4. Construye tu Chat (Paso a Paso)
+      </button>
+      <button onclick="switchTab(5)" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 whitespace-nowrap text-slate-400 hover:text-white hover:bg-[#0D1E38]" data-tab="5">
+        <span>💬</span> 5. Playground en Vivo
+      </button>
+      <button onclick="switchTab(6)" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 whitespace-nowrap text-slate-400 hover:text-white hover:bg-[#0D1E38]" data-tab="6">
+        <span>🏆</span> 6. Misiones & Retos
+      </button>
+    </nav>
+  </header>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- ========================================== -->
+    <!-- MÓDULO 1: LA CHISPA DE LA IA (MENTALIDAD) -->
+    <!-- ========================================== -->
+    <section id="module-1" class="module-content space-y-8 animate-fadeIn">
+      
+      <!-- Hero Banner -->
+      <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#08172E] via-[#0D1E38] to-[#050D1A] border border-[#1E355B] p-8 md:p-12 shadow-2xl">
+        <div class="absolute -right-20 -top-20 w-96 h-96 bg-[#5E3AE2]/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute right-10 bottom-0 opacity-15 pointer-events-none hidden lg:block">
+          <svg class="w-80 h-80 text-[#2CAAFF]" viewBox="0 0 200 200" fill="currentColor">
+            <path d="M45,-76C58,-70,69,-59,76,-46C83,-33,87,-16,85,0C83,16,76,32,67,46C58,60,47,72,33,78C19,85,2,86,-15,84C-32,82,-49,77,-62,67C-75,57,-84,42,-88,26C-92,9,-91,-9,-85,-25C-79,-41,-68,-55,-54,-62C-40,-69,-20,-69,-1,-68C18,-66,33,-82,45,-76Z" transform="translate(100 100)" />
+          </svg>
+        </div>
+
+        <div class="relative z-10 max-w-3xl space-y-4">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#5E3AE2]/20 border border-[#5E3AE2]/50 text-xs font-black uppercase tracking-wider text-[#2CAAFF]">
+            <span class="w-2 h-2 rounded-full bg-[#2CAAFF] animate-ping"></span>
+            Fundamentos para Programadores
+          </div>
+          <h1 class="text-3xl sm:text-5xl font-black tracking-tight text-white leading-tight">
+            La IA no es magia: es <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#2CAAFF] to-[#5E3AE2]">Probabilidad y Código</span>
+          </h1>
+          <p class="text-slate-300 text-base sm:text-lg leading-relaxed font-normal">
+            Bienvenido al laboratorio, camper. Antes de tocar una sola API, necesitas entender la verdad fundamental: los modelos de lenguaje (LLMs como ChatGPT) <strong class="text-white font-bold">no tienen conciencia ni piensan como humanos</strong>. Son colosales calculadoras estadísticas que predicen qué palabra tiene mayor probabilidad matemática de aparecer a continuación.
+          </p>
+        </div>
+      </div>
+
+      <!-- Comparativa Conceptual: Mito vs. Realidad de Código -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <!-- Tarjeta Mito -->
+        <div class="bg-[#0D1E38]/80 rounded-2xl p-6 border border-rose-900/40 relative overflow-hidden group">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-9 h-9 rounded-lg bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400 font-bold text-lg">
+              ❌
+            </div>
+            <div>
+              <h2 class="font-bold text-lg text-white">El Mito de Ciencia Ficción</h2>
+              <span class="text-xs text-rose-400 font-medium">Lo que la gente cree</span>
+            </div>
+          </div>
+          <p class="text-slate-300 text-sm leading-relaxed">
+            "La IA es una mente consciente en la nube que lee mis preguntas, razona con sentimientos, busca en una enciclopedia secreta y me redacta una respuesta original con intención propia."
+          </p>
+          <div class="mt-4 p-3 bg-[#08172E] rounded-xl border border-rose-900/30 text-xs text-rose-300">
+            <strong>Consecuencia de este error:</strong> Confiar a ciegas en las respuestas, asustarse o no saber cómo depurar cuando la IA "alucina" (inventa datos con total seguridad).
+          </div>
+        </div>
+
+        <!-- Tarjeta Realidad -->
+        <div class="bg-[#0D1E38]/80 rounded-2xl p-6 border border-[#00AA80]/40 relative overflow-hidden group">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-9 h-9 rounded-lg bg-[#00AA80]/10 border border-[#00AA80]/30 flex items-center justify-center text-[#00AA80] font-bold text-lg">
+              ✅
+            </div>
+            <div>
+              <h2 class="font-bold text-lg text-white">La Realidad del Programador</h2>
+              <span class="text-xs text-[#00AA80] font-medium">Lo que realmente hace el algoritmo</span>
+            </div>
+          </div>
+          <p class="text-slate-300 text-sm leading-relaxed">
+            "Un LLM es una red neuronal gigante que toma una secuencia de números (<strong class="text-white">tokens</strong>), analiza las relaciones contextuales (<strong class="text-white">atención</strong>) y calcula una distribución de probabilidades para el siguiente número."
+          </p>
+          <div class="mt-4 p-3 bg-[#08172E] rounded-xl border border-[#00AA80]/30 text-xs text-[#00AA80]">
+            <strong>El poder del camper:</strong> Al entender cómo procesa los tokens, puedes diseñar prompts precisos, estructurar respuestas en JSON y conectarlo a tu código en JavaScript.
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Diagrama de Flujo: El Ciclo de Predicción -->
+      <div class="bg-[#08172E] rounded-2xl p-6 border border-[#1E355B] space-y-4">
+        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+          <span>🔄</span> ¿Cómo se genera una respuesta? El ciclo paso a paso
+        </h3>
+        <p class="text-xs text-slate-400">
+          Cada vez que el chat responde, se ejecuta este bucle iterativo milisegundo a milisegundo:
+        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 pt-2">
+          
+          <div class="bg-[#0D1E38] p-4 rounded-xl border border-[#1E355B] flex flex-col justify-between">
+            <div>
+              <span class="text-[10px] font-mono font-bold text-[#2CAAFF] uppercase tracking-wider">Paso 01</span>
+              <h4 class="font-bold text-white text-sm mt-1">1. Tokenización</h4>
+              <p class="text-xs text-slate-400 mt-2">
+                Tu texto se corta en pedacitos llamados <strong class="text-slate-200">tokens</strong> (palabras o sílabas).
+              </p>
+            </div>
+            <div class="mt-3 p-2 bg-[#050D1A] rounded font-mono text-[11px] text-[#2CAAFF]">
+              "Hola mundo" → [9906, 1917]
+            </div>
+          </div>
+
+          <div class="bg-[#0D1E38] p-4 rounded-xl border border-[#1E355B] flex flex-col justify-between">
+            <div>
+              <span class="text-[10px] font-mono font-bold text-[#5E3AE2] uppercase tracking-wider">Paso 02</span>
+              <h4 class="font-bold text-white text-sm mt-1">2. Embeddings</h4>
+              <p class="text-xs text-slate-400 mt-2">
+                Cada token se convierte en una lista de números (vector) que representa su significado.
+              </p>
+            </div>
+            <div class="mt-3 p-2 bg-[#050D1A] rounded font-mono text-[11px] text-[#5E3AE2]">
+              9906 → [0.12, -0.45, 0.88...]
+            </div>
+          </div>
+
+          <div class="bg-[#0D1E38] p-4 rounded-xl border border-[#1E355B] flex flex-col justify-between">
+            <div>
+              <span class="text-[10px] font-mono font-bold text-[#F4B422] uppercase tracking-wider">Paso 03</span>
+              <h4 class="font-bold text-white text-sm mt-1">3. Atención (Transformer)</h4>
+              <p class="text-xs text-slate-400 mt-2">
+                Todas las palabras se analizan juntas para entender qué rol juega cada una en la frase.
+              </p>
+            </div>
+            <div class="mt-3 p-2 bg-[#050D1A] rounded font-mono text-[11px] text-[#F4B422]">
+              Calcula pesos de atención
+            </div>
+          </div>
+
+          <div class="bg-[#0D1E38] p-4 rounded-xl border border-[#1E355B] flex flex-col justify-between">
+            <div>
+              <span class="text-[10px] font-mono font-bold text-[#00AA80] uppercase tracking-wider">Paso 04</span>
+              <h4 class="font-bold text-white text-sm mt-1">4. Predicción del Siguiente</h4>
+              <p class="text-xs text-slate-400 mt-2">
+                Elige el token con mayor probabilidad y lo añade a la frase para predecir el siguiente.
+              </p>
+            </div>
+            <div class="mt-3 p-2 bg-[#050D1A] rounded font-mono text-[11px] text-[#00AA80]">
+              P("!") = 94.2% → Escribe "!"
+            </div>
+          </div>
+
+        </div>
+
+        <div class="pt-4 flex justify-end">
+          <button onclick="switchTab(2)" class="px-5 py-2.5 bg-[#5E3AE2] hover:bg-[#4728BF] text-white font-bold text-xs rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-purple-500/20">
+            Ir al Siguiente Módulo: Embeddings 2D
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- MÓDULO 2: EMBEDDINGS Y SIMULADOR 2D -->
+    <!-- ========================================== -->
+    <section id="module-2" class="module-content hidden space-y-8 animate-fadeIn">
+      
+      <!-- Introducción Teórica Concisa -->
+      <div class="bg-[#08172E] border border-[#1E355B] rounded-3xl p-8 space-y-4">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#2CAAFF]/20 border border-[#2CAAFF]/50 text-xs font-black uppercase tracking-wider text-[#2CAAFF]">
+          <span>🧭</span> Módulo 2
+        </div>
+        <h2 class="text-2xl sm:text-4xl font-black text-white tracking-tight">
+          Embeddings: ¿Cómo las computadoras entienden significados?
+        </h2>
+        <p class="text-slate-300 text-sm sm:text-base leading-relaxed max-w-4xl">
+          Las computadoras no entienden letras ni sentimientos: <strong class="text-white font-bold">solo procesan números</strong>. 
+          Un <strong class="text-[#2CAAFF]">Embedding</strong> es la traducción de una palabra, frase o código a una lista de números llamada <strong class="text-white">vector de coordenadas</strong>. 
+          La magia radica en que conceptos con significados similares terminan con números similares, ubicándose <strong class="text-[#00AA80]">cerca en el espacio geométrico</strong>.
+        </p>
+
+        <!-- Analogía del GPS -->
+        <div class="p-4 bg-[#0D1E38] rounded-2xl border border-[#1E355B] flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div class="w-12 h-12 rounded-xl bg-[#5E3AE2]/20 border border-[#5E3AE2]/50 flex items-center justify-center text-2xl shrink-0">
+            📍
+          </div>
+          <div class="text-xs sm:text-sm text-slate-300">
+            <strong class="text-white font-bold">La analogía del GPS:</strong> En Google Maps, dos lugares cercanos (como dos aulas de Campuslands) tienen coordenadas de latitud y longitud muy parecidas. Con los Embeddings pasa lo mismo: las palabras <span class="font-mono text-[#2CAAFF]">"gato"</span> y <span class="font-mono text-[#2CAAFF]">"perro"</span> tienen coordenadas casi idénticas, mientras que <span class="font-mono text-[#F4B422]">"refrigerador"</span> está a kilómetros de distancia.
+          </div>
+        </div>
+      </div>
+
+      <!-- SIMULADOR 2D INTERACTIVO -->
+      <div class="bg-[#08172E] border border-[#1E355B] rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#1E355B] pb-4">
+          <div>
+            <h3 class="text-lg font-bold text-white flex items-center gap-2">
+              <span>🎯</span> Simulador 2D de Espacio Semántico
+            </h3>
+            <p class="text-xs text-slate-400">
+              Haz clic en cualquier palabra para calcular su distancia euclidiana y ver cómo se agrupan por significado.
+            </p>
+          </div>
+          
+          <div class="flex flex-wrap items-center gap-2">
+            <button id="btn-demo-vector" class="px-3.5 py-2 bg-[#5E3AE2] hover:bg-[#4728BF] text-white font-bold text-xs rounded-xl transition flex items-center gap-1.5 shadow-md shadow-purple-500/20">
+              <span>✨</span> Probar: Rey - Hombre + Mujer ≈ Reina
+            </button>
+            <button id="btn-reset-embeddings" class="px-3 py-2 bg-[#0D1E38] hover:bg-[#1E355B] text-slate-300 text-xs font-semibold rounded-xl border border-[#1E355B] transition">
+              Reiniciar
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          <!-- Lienzo Interactivo SVG / Canvas -->
+          <div class="lg:col-span-2 relative bg-[#050D1A] rounded-2xl border border-[#1E355B] p-4 flex flex-col items-center justify-center min-h-[380px] overflow-hidden">
+            <!-- Grid de fondo simulando plano cartesiano -->
+            <div class="absolute inset-0 bg-[linear-gradient(to_right,#1E355B18_1px,transparent_1px),linear-gradient(to_bottom,#1E355B18_1px,transparent_1px)] bg-[size:32px_32px]"></div>
+            
+            <!-- Ejes x/y -->
+            <div class="absolute left-1/2 top-0 bottom-0 w-[1px] bg-[#1E355B]/40"></div>
+            <div class="absolute top-1/2 left-0 right-0 h-[1px] bg-[#1E355B]/40"></div>
+            
+            <!-- Etiquetas de ejes -->
+            <span class="absolute top-2 left-1/2 -translate-x-1/2 text-[10px] font-mono text-slate-500 bg-[#050D1A] px-1">+ Dimensión 2 (Naturaleza / Humano)</span>
+            <span class="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] font-mono text-slate-500 bg-[#050D1A] px-1">- Dimensión 2 (Objetos / Inanimado)</span>
+            <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-mono text-slate-500 bg-[#050D1A] px-1">+ Dimensión 1 (Tech / Lógica)</span>
+            <span class="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-mono text-slate-500 bg-[#050D1A] px-1">- Dimensión 1 (Emoción / Informal)</span>
+
+            <!-- SVG para dibujar líneas de conexión entre nodos -->
+            <svg id="embedding-svg-lines" class="absolute inset-0 w-full h-full pointer-events-none z-10"></svg>
+
+            <!-- Contenedor dinámico de palabras (nodos flotantes) -->
+            <div id="embedding-nodes-container" class="relative w-full h-[340px] z-20">
+              <!-- Nodos inyectados por JavaScript -->
+            </div>
+          </div>
+
+          <!-- Panel de Inspección Matemática del Nodo -->
+          <div class="bg-[#0D1E38] rounded-2xl p-5 border border-[#1E355B] flex flex-col justify-between space-y-4">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-mono text-[#2CAAFF] uppercase font-bold tracking-wider">Inspector Vectorial</span>
+                <span id="selected-word-badge" class="px-2 py-0.5 text-xs font-bold bg-[#5E3AE2]/30 text-[#2CAAFF] rounded-md border border-[#5E3AE2]/50">
+                  Ninguna
+                </span>
+              </div>
+              <h4 id="selected-word-title" class="text-xl font-black text-white mt-1">Selecciona una palabra</h4>
+              
+              <div class="mt-3 p-3 bg-[#08172E] rounded-xl border border-[#1E355B] space-y-1.5 font-mono text-xs">
+                <div class="text-slate-400 text-[11px]">Vector 2D Simulado:</div>
+                <div id="selected-vector-val" class="text-[#2CAAFF] font-bold">[ 0.00 , 0.00 ]</div>
+                <div class="text-[10px] text-slate-500 pt-1">
+                  En modelos reales como OpenAI, el vector tiene <span class="text-slate-300 font-bold">1,536 dimensiones</span>.
+                </div>
+              </div>
+
+              <!-- Lista de cercanía semántica -->
+              <div class="mt-4 space-y-2">
+                <span class="text-xs font-bold text-slate-300">Distancia semántica respecto a las demás:</span>
+                <div id="distances-list" class="space-y-1.5 max-h-44 overflow-y-auto pr-1 text-xs">
+                  <div class="text-slate-400 italic text-xs py-2">Haz clic en un punto del plano para calcular.</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Fórmula en vivo -->
+            <div id="formula-box" class="p-3 bg-[#08172E] rounded-xl border border-[#5E3AE2]/40 text-xs hidden animate-fadeIn">
+              <span class="text-[#F4B422] font-bold text-[11px]">Aritmética de Embeddings:</span>
+              <p class="font-mono text-slate-200 mt-1">Rey - Hombre + Mujer = <strong class="text-[#00AA80]">Reina</strong></p>
+              <p class="text-[10px] text-slate-400 mt-0.5">Al restar el concepto de "género masculino" y sumar "femenino", la posición resultante cae en la vecindad de Reina.</p>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Casos Prácticos de Aplicación en la Vida Real -->
+        <div class="pt-4 border-t border-[#1E355B]/60">
+          <h4 class="text-sm font-bold text-white mb-3">¿Para qué uso Embeddings en mis proyectos de JavaScript?</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="p-3 bg-[#0D1E38] rounded-xl border border-[#1E355B] text-xs">
+              <span class="font-bold text-[#2CAAFF] block mb-1">🔍 Búsqueda Semántica</span>
+              Permite a los usuarios buscar "comida para perro" y encontrar resultados de "alimento balanceado para canes" aunque no coincida ninguna letra.
+            </div>
+            <div class="p-3 bg-[#0D1E38] rounded-xl border border-[#1E355B] text-xs">
+              <span class="font-bold text-[#5E3AE2] block mb-1">📚 RAG (Chatear con tus PDFs)</span>
+              Conviertes fragmentos de documentos en embeddings y buscas los más cercanos a la duda del usuario para dárselos a ChatGPT.
+            </div>
+            <div class="p-3 bg-[#0D1E38] rounded-xl border border-[#1E355B] text-xs">
+              <span class="font-bold text-[#00AA80] block mb-1">🎯 Sistemas de Recomendación</span>
+              Si a un camper le gustan ciertos videojuegos o repositorios, le recomiendas otros cuyos embeddings estén más cerca.
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-2 flex justify-between items-center">
+          <button onclick="switchTab(1)" class="px-4 py-2 bg-[#0D1E38] hover:bg-[#1E355B] text-slate-300 text-xs font-semibold rounded-xl border border-[#1E355B] transition">
+            ← Volver a Módulo 1
+          </button>
+          <button onclick="switchTab(3)" class="px-5 py-2.5 bg-[#5E3AE2] hover:bg-[#4728BF] text-white font-bold text-xs rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-purple-500/20">
+            Ir a Transformers & Atención →
+          </button>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- MÓDULO 3: TRANSFORMERS Y ATENCIÓN -->
+    <!-- ========================================== -->
+    <section id="module-3" class="module-content hidden space-y-8 animate-fadeIn">
+      
+      <!-- Introducción Teórica Concisa -->
+      <div class="bg-[#08172E] border border-[#1E355B] rounded-3xl p-8 space-y-4">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F4B422]/20 border border-[#F4B422]/50 text-xs font-black uppercase tracking-wider text-[#F4B422]">
+          <span>⚡</span> Módulo 3
+        </div>
+        <h2 class="text-2xl sm:text-4xl font-black text-white tracking-tight">
+          Transformers: La Revolución del Mecanismo de Atención
+        </h2>
+        <p class="text-slate-300 text-sm sm:text-base leading-relaxed max-w-4xl">
+          Antes del año 2017, las inteligencias artificiales leían los textos <strong class="text-white">palabra por palabra en fila india</strong> (usando redes recurrentes RNNs). Era lento y para cuando llegaban al final de un párrafo largo, ya habían "olvidado" el inicio.
+          <br><br>
+          La arquitectura <strong class="text-[#2CAAFF]">Transformer</strong> cambió la historia con una idea brillante: <strong class="text-white">procesar todo el texto en paralelo a la vez</strong> y usar un <strong class="text-[#F4B422]">Mecanismo de Atención ("Self-Attention")</strong> para determinar qué palabras deben prestarle atención a cuáles.
+        </p>
+      </div>
+
+      <!-- INSPECTOR DE ATENCIÓN INTERACTIVO -->
+      <div class="bg-[#08172E] border border-[#1E355B] rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl">
+        <div class="border-b border-[#1E355B] pb-4">
+          <h3 class="text-lg font-bold text-white flex items-center gap-2">
+            <span>🔬</span> Inspector de Atención en Vivo
+          </h3>
+          <p class="text-xs text-slate-400 mt-1">
+            Haz clic o pasa el cursor sobre las palabras de la oración para ver a qué otras palabras le presta más "atención" matemática la IA para desambiguar el significado.
+          </p>
+        </div>
+
+        <!-- La Oración Interactiva -->
+        <div class="p-6 bg-[#050D1A] rounded-2xl border border-[#1E355B] flex flex-wrap gap-2.5 items-center justify-center text-sm sm:text-base" id="attention-sentence-container">
+          <!-- Palabras inyectadas por JavaScript con atributos data-token -->
+        </div>
+
+        <!-- Panel de Resultados de Atención -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+          
+          <div class="bg-[#0D1E38] p-5 rounded-2xl border border-[#1E355B] space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-mono text-[#F4B422] uppercase font-bold">Foco de Atención Actual:</span>
+              <span id="attention-focus-badge" class="font-mono font-bold text-xs bg-[#5E3AE2] text-white px-2.5 py-0.5 rounded-md">"este"</span>
+            </div>
+            
+            <p id="attention-explanation-text" class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+              Cuando el modelo llega a la palabra <strong class="text-white">"este"</strong>, el mecanismo de atención asigna el <strong class="text-[#2CAAFF]">72% de sus pesos</strong> a conectar con <strong class="text-white">"bot"</strong> y el <strong class="text-[#F4B422]">18%</strong> con <strong class="text-white">"código"</strong>. Así sabe que el sujeto que tenía el error era el bot y no la computadora ni el camper.
+            </p>
+
+            <!-- Barras de atención porcentual -->
+            <div id="attention-bars" class="space-y-2 pt-2 text-xs font-mono">
+              <!-- Inyectado por JS -->
+            </div>
+          </div>
+
+          <!-- Comparación Visual: Red Antigua vs Transformer -->
+          <div class="space-y-3">
+            <div class="p-3.5 bg-[#0D1E38] rounded-xl border border-slate-700/60">
+              <span class="text-[11px] font-bold text-rose-400 block mb-1">⏳ Antes: Modelos Recurrentes (RNN/LSTM)</span>
+              <p class="text-xs text-slate-400">
+                Lectura estrictamente secuencial: Palabra 1 → Palabra 2 → Palabra 3. Imposible de entrenar rápido en GPUs modernas y con memoria frágil.
+              </p>
+            </div>
+            <div class="p-3.5 bg-[#0D1E38] rounded-xl border border-[#00AA80]/40">
+              <span class="text-[11px] font-bold text-[#00AA80] block mb-1">⚡ Ahora: Arquitectura Transformer</span>
+              <p class="text-xs text-slate-400">
+                Todas las palabras entran a la GPU al mismo tiempo. La matriz de atención conecta cada token con todos los demás en paralelo.
+              </p>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="pt-2 flex justify-between items-center">
+          <button onclick="switchTab(2)" class="px-4 py-2 bg-[#0D1E38] hover:bg-[#1E355B] text-slate-300 text-xs font-semibold rounded-xl border border-[#1E355B] transition">
+            ← Volver a Embeddings
+          </button>
+          <button onclick="switchTab(4)" class="px-5 py-2.5 bg-[#5E3AE2] hover:bg-[#4728BF] text-white font-bold text-xs rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-purple-500/20">
+            Ir al Taller: Construye tu Chat en JS →
+          </button>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- MÓDULO 4: TALLER PASO A PASO EN JAVASCRIPT -->
+    <!-- ========================================== -->
+    <section id="module-4" class="module-content hidden space-y-8 animate-fadeIn">
+      
+      <!-- Encabezado del Taller -->
+      <div class="bg-[#08172E] border border-[#1E355B] rounded-3xl p-8 space-y-4">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#5E3AE2]/20 border border-[#5E3AE2]/50 text-xs font-black uppercase tracking-wider text-[#2CAAFF]">
+          <span>🛠️</span> Módulo 4 · Taller Práctico
+        </div>
+        <h2 class="text-2xl sm:text-4xl font-black text-white tracking-tight">
+          Construye tu propio Chatbot en JavaScript usando ChatGPT
+        </h2>
+        <p class="text-slate-300 text-sm sm:text-base leading-relaxed max-w-4xl">
+          Ahora que entiendes la teoría, es hora de poner manos al teclado. Vamos a crear un chat funcional utilizando <strong class="text-white">JavaScript puro (Vanilla JS)</strong>, aprendiendo cómo apoyarnos en ChatGPT para estructurar el proyecto de forma profesional y entendiendo cada pieza que programamos.
+        </p>
+      </div>
+
+      <!-- Selector de Pasos del Taller -->
+      <div class="space-y-6">
+        
+        <!-- Pestañas de los 5 Pasos -->
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2" id="workshop-steps-nav">
+          <button onclick="showStep(1)" class="step-nav-btn active p-3 rounded-xl border border-[#5E3AE2] bg-[#5E3AE2] text-white text-xs font-bold transition flex flex-col items-center gap-1 shadow-md shadow-purple-500/20" data-step="1">
+            <span class="text-[10px] font-mono opacity-80">PASO 01</span>
+            <span>🤖 Prompt Maestro</span>
+          </button>
+          <button onclick="showStep(2)" class="step-nav-btn p-3 rounded-xl border border-[#1E355B] bg-[#0D1E38] text-slate-400 text-xs font-bold transition flex flex-col items-center gap-1 hover:text-white" data-step="2">
+            <span class="text-[10px] font-mono opacity-80">PASO 02</span>
+            <span>🧱 Estructura HTML</span>
+          </button>
+          <button onclick="showStep(3)" class="step-nav-btn p-3 rounded-xl border border-[#1E355B] bg-[#0D1E38] text-slate-400 text-xs font-bold transition flex flex-col items-center gap-1 hover:text-white" data-step="3">
+            <span class="text-[10px] font-mono opacity-80">PASO 03</span>
+            <span>🧠 Memoria en JS</span>
+          </button>
+          <button onclick="showStep(4)" class="step-nav-btn p-3 rounded-xl border border-[#1E355B] bg-[#0D1E38] text-slate-400 text-xs font-bold transition flex flex-col items-center gap-1 hover:text-white" data-step="4">
+            <span class="text-[10px] font-mono opacity-80">PASO 04</span>
+            <span>📡 Llamada Fetch</span>
+          </button>
+          <button onclick="showStep(5)" class="step-nav-btn p-3 rounded-xl border border-[#1E355B] bg-[#0D1E38] text-slate-400 text-xs font-bold transition flex flex-col items-center gap-1 hover:text-white" data-step="5">
+            <span class="text-[10px] font-mono opacity-80">PASO 05</span>
+            <span>🎨 Burbujas en DOM</span>
+          </button>
+        </div>
+
+        <!-- CONTENEDORES DE CONTENIDO POR PASO -->
+
+        <!-- PASO 1: EL PROMPT MAESTRO -->
+        <div id="step-content-1" class="step-panel bg-[#08172E] border border-[#1E355B] rounded-3xl p-6 sm:p-8 space-y-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-xs font-mono font-bold text-[#2CAAFF] uppercase">Paso 1 de 5</span>
+              <h3 class="text-xl font-bold text-white mt-1">Cómo pedirle ayuda a ChatGPT como un Senior Developer</h3>
+            </div>
+            <button onclick="copyToClipboard('prompt-chatgpt-copy', this)" class="px-3.5 py-1.5 bg-[#0D1E38] hover:bg-[#1E355B] text-slate-200 text-xs font-semibold rounded-lg border border-[#1E355B] flex items-center gap-1.5 transition">
+              <svg class="w-4 h-4 text-[#2CAAFF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+              <span>Copiar Prompt</span>
+            </button>
+          </div>
+
+          <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            Muchos estudiantes le dicen a ChatGPT simplemente: <em>"Hazme un chat en JavaScript"</em>. El resultado suele ser código con librerías extrañas, NodeJS en el frontend o código que no entienden. 
+            Este es el <strong class="text-white">Prompt Maestro con restricciones</strong> para que ChatGPT sea tu mentor perfecto:
+          </p>
+
+          <!-- Bloque de Código del Prompt -->
+          <div class="relative bg-[#050D1A] rounded-2xl border border-[#1E355B] p-5 font-mono text-xs sm:text-sm text-slate-200 overflow-x-auto leading-relaxed">
+            <pre id="prompt-chatgpt-copy" class="whitespace-pre-wrap">Actúa como un profesor senior de JavaScript y tutor de Campuslands.
+Necesito que me enseñes a construir una interfaz de chat web simple paso a paso.
+
+Mis restricciones de aprendizaje son:
+1. Usa ÚNICAMENTE JavaScript moderno nativo (Vanilla JS) sin React ni frameworks.
+2. Todo debe ir en un solo archivo index.html para probarlo en el navegador.
+3. Explícame primero la estructura HTML, luego cómo guardar el historial en un Array de objetos, y finalmente la función con fetch() y async/await.
+4. Incluye comentarios didácticos en cada línea explicando qué hace.
+5. No uses librerías externas complejas.</pre>
+          </div>
+
+          <div class="p-4 bg-[#0D1E38] rounded-xl border border-[#5E3AE2]/30 text-xs text-slate-300">
+            💡 <strong class="text-white">Tip de Campuslands:</strong> Al darle restricciones claras a la IA (restricción de librerías, rol de mentor y formato didáctico), evitas que te genere código confuso o que no sea compatible con tu nivel actual.
+          </div>
+        </div>
+
+        <!-- PASO 2: ESTRUCTURA HTML -->
+        <div id="step-content-2" class="step-panel hidden bg-[#08172E] border border-[#1E355B] rounded-3xl p-6 sm:p-8 space-y-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-xs font-mono font-bold text-[#2CAAFF] uppercase">Paso 2 de 5</span>
+              <h3 class="text-xl font-bold text-white mt-1">La Estructura HTML Mínima Necesaria</h3>
+            </div>
+            <button onclick="copyToClipboard('html-code-copy', this)" class="px-3.5 py-1.5 bg-[#0D1E38] hover:bg-[#1E355B] text-slate-200 text-xs font-semibold rounded-lg border border-[#1E355B] flex items-center gap-1.5 transition">
+              <svg class="w-4 h-4 text-[#2CAAFF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+              <span>Copiar HTML</span>
+            </button>
+          </div>
+
+          <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            Un chat solo necesita 3 elementos semánticos esenciales: una caja con scroll donde se apilan los mensajes, un campo de texto (<code class="text-[#2CAAFF]">&lt;input&gt;</code>) y un botón de enviar (<code class="text-[#2CAAFF]">&lt;button&gt;</code>):
+          </p>
+
+          <div class="relative bg-[#050D1A] rounded-2xl border border-[#1E355B] p-5 font-mono text-xs sm:text-sm text-slate-200 overflow-x-auto leading-relaxed">
+            <pre id="html-code-copy">&lt;!-- Contenedor Principal del Chat --&gt;
+&lt;div class="chat-wrapper"&gt;
+  
+  &lt;!-- 1. Área donde aparecerán los mensajes con scroll --&gt;
+  &lt;div id="chat-messages" class="messages-box"&gt;
+    &lt;div class="msg assistant"&gt;¡Hola camper! Soy tu bot de IA. ¿En qué te ayudo?&lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;!-- 2. Barra de entrada inferior --&gt;
+  &lt;form id="chat-form" class="input-bar"&gt;
+    &lt;input type="text" id="user-input" placeholder="Escribe tu mensaje..." required /&gt;
+    &lt;button type="submit" id="btn-send"&gt;Enviar&lt;/button&gt;
+  &lt;/form&gt;
+
+&lt;/div&gt;</pre>
+          </div>
+        </div>
+
+        <!-- PASO 3: MEMORIA EN JAVASCRIPT -->
+        <div id="step-content-3" class="step-panel hidden bg-[#08172E] border border-[#1E355B] rounded-3xl p-6 sm:p-8 space-y-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-xs font-mono font-bold text-[#2CAAFF] uppercase">Paso 3 de 5</span>
+              <h3 class="text-xl font-bold text-white mt-1">La Memoria de la IA: El Array de Mensajes</h3>
+            </div>
+            <button onclick="copyToClipboard('memory-code-copy', this)" class="px-3.5 py-1.5 bg-[#0D1E38] hover:bg-[#1E355B] text-slate-200 text-xs font-semibold rounded-lg border border-[#1E355B] flex items-center gap-1.5 transition">
+              <svg class="w-4 h-4 text-[#2CAAFF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+              <span>Copiar JS</span>
+            </button>
+          </div>
+
+          <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            Las APIs de chat no tienen memoria propia. En cada llamada, <strong class="text-white">debemos enviar toda la conversación previa</strong> dentro de un Array de objetos. Cada objeto tiene 2 propiedades clave: <code class="text-[#2CAAFF]">role</code> y <code class="text-[#2CAAFF]">content</code>.
+          </p>
+
+          <!-- Los 3 Roles Explicados -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+            <div class="p-3 bg-[#0D1E38] rounded-xl border border-[#5E3AE2]/40 text-xs">
+              <span class="font-bold text-[#5E3AE2] font-mono">role: "system"</span>
+              <p class="text-slate-300 mt-1">Las reglas maestras del bot (ej: "Eres un tutor amigable de Campuslands y respondes breve").</p>
+            </div>
+            <div class="p-3 bg-[#0D1E38] rounded-xl border border-[#2CAAFF]/40 text-xs">
+              <span class="font-bold text-[#2CAAFF] font-mono">role: "user"</span>
+              <p class="text-slate-300 mt-1">Los mensajes que escribe el estudiante o usuario en el input.</p>
+            </div>
+            <div class="p-3 bg-[#0D1E38] rounded-xl border border-[#00AA80]/40 text-xs">
+              <span class="font-bold text-[#00AA80] font-mono">role: "assistant"</span>
+              <p class="text-slate-300 mt-1">Las respuestas que la IA devuelve y que agregamos al historial.</p>
+            </div>
+          </div>
+
+          <div class="relative bg-[#050D1A] rounded-2xl border border-[#1E355B] p-5 font-mono text-xs sm:text-sm text-slate-200 overflow-x-auto leading-relaxed">
+            <pre id="memory-code-copy">// Array que guarda la conversación completa
+const historial = [
+  {
+    role: "system",
+    content: "Eres el Tutor Virtual de Campuslands. Ayudas a los campers con explicaciones concisas y ejemplos en JavaScript."
+  }
+];
+
+// Cuando el usuario escribe algo:
+function agregarMensajeUsuario(texto) {
+  historial.push({ role: "user", content: texto });
+}
+
+// Cuando la IA responde:
+function agregarMensajeIA(textoRespuesta) {
+  historial.push({ role: "assistant", content: textoRespuesta });
+}</pre>
+          </div>
+        </div>
+
+        <!-- PASO 4: LLAMADA FETCH -->
+        <div id="step-content-4" class="step-panel hidden bg-[#08172E] border border-[#1E355B] rounded-3xl p-6 sm:p-8 space-y-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-xs font-mono font-bold text-[#2CAAFF] uppercase">Paso 4 de 5</span>
+              <h3 class="text-xl font-bold text-white mt-1">La Función de Envío con fetch() y async/await</h3>
+            </div>
+            <button onclick="copyToClipboard('fetch-code-copy', this)" class="px-3.5 py-1.5 bg-[#0D1E38] hover:bg-[#1E355B] text-slate-200 text-xs font-semibold rounded-lg border border-[#1E355B] flex items-center gap-1.5 transition">
+              <svg class="w-4 h-4 text-[#2CAAFF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+              <span>Copiar JS</span>
+            </button>
+          </div>
+
+          <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            Aquí usamos lo aprendido en JavaScript: una función asíncrona que hace una petición HTTP tipo <code class="text-[#2CAAFF]">POST</code> al endpoint de Chat Completions:
+          </p>
+
+          <div class="relative bg-[#050D1A] rounded-2xl border border-[#1E355B] p-5 font-mono text-xs sm:text-sm text-slate-200 overflow-x-auto leading-relaxed">
+            <pre id="fetch-code-copy">async function consultarChatGPT(apiKey, mensajes) {
+  try {
+    const respuesta = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini", // Modelo rápido y económico
+        messages: mensajes,
+        temperature: 0.7
+      })
+    });
+
+    if (!respuesta.ok) {
+      throw new Error(`Error en la API: ${respuesta.status}`);
+    }
+
+    const data = await respuesta.json();
+    // Extraemos el texto de la respuesta
+    const contenidoIA = data.choices[0].message.content;
+    return contenidoIA;
+
+  } catch (error) {
+    console.error("Hubo un fallo:", error);
+    return "Lo siento camper, ocurrió un error al comunicarme con la IA.";
+  }
+}</pre>
+          </div>
+        </div>
+
+        <!-- PASO 5: RENDERIZADO EN EL DOM -->
+        <div id="step-content-5" class="step-panel hidden bg-[#08172E] border border-[#1E355B] rounded-3xl p-6 sm:p-8 space-y-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-xs font-mono font-bold text-[#2CAAFF] uppercase">Paso 5 de 5</span>
+              <h3 class="text-xl font-bold text-white mt-1">Renderizado Dinámico en el DOM</h3>
+            </div>
+            <button onclick="copyToClipboard('dom-code-copy', this)" class="px-3.5 py-1.5 bg-[#0D1E38] hover:bg-[#1E355B] text-slate-200 text-xs font-semibold rounded-lg border border-[#1E355B] flex items-center gap-1.5 transition">
+              <svg class="w-4 h-4 text-[#2CAAFF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+              <span>Copiar JS</span>
+            </button>
+          </div>
+
+          <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            Finalmente, conectamos el formulario para capturar el submit, pintar la burbuja del usuario y luego la del bot:
+          </p>
+
+          <div class="relative bg-[#050D1A] rounded-2xl border border-[#1E355B] p-5 font-mono text-xs sm:text-sm text-slate-200 overflow-x-auto leading-relaxed">
+            <pre id="dom-code-copy">const chatForm = document.getElementById("chat-form");
+const userInput = document.getElementById("user-input");
+const chatMessages = document.getElementById("chat-messages");
+
+function renderBurbuja(texto, rol) {
+  const burbuja = document.createElement("div");
+  burbuja.className = `p-3 rounded-xl mb-3 text-xs leading-relaxed max-w-[80%] ${
+    rol === "user" 
+      ? "ml-auto bg-[#5E3AE2] text-white" 
+      : "mr-auto bg-[#0D1E38] border border-[#1E355B] text-slate-200"
+  }`;
+  burbuja.textContent = texto;
+  chatMessages.appendChild(burbuja);
+  chatMessages.scrollTop = chatMessages.scrollHeight; // Auto-scroll
+}
+
+chatForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const mensaje = userInput.value.trim();
+  if (!mensaje) return;
+
+  // 1. Mostrar burbuja de usuario y limpiar input
+  renderBurbuja(mensaje, "user");
+  userInput.value = "";
+  agregarMensajeUsuario(mensaje);
+
+  // 2. Consultar y mostrar respuesta
+  const respuesta = await consultarChatGPT("TU_API_KEY", historial);
+  renderBurbuja(respuesta, "assistant");
+  agregarMensajeIA(respuesta);
+});</pre>
+          </div>
+
+          <div class="pt-2 flex justify-end">
+            <button onclick="switchTab(5)" class="px-5 py-2.5 bg-[#00AA80] hover:bg-[#008f6c] text-white font-bold text-xs rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20">
+              ¡Probarlo en el Playground en Vivo! 💬 →
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- MÓDULO 5: PLAYGROUND EN VIVO -->
+    <!-- ========================================== -->
+    <section id="module-5" class="module-content hidden space-y-8 animate-fadeIn">
+      
+      <!-- Encabezado del Playground -->
+      <div class="bg-[#08172E] border border-[#1E355B] rounded-3xl p-6 sm:p-8 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#00AA80]/20 border border-[#00AA80]/50 text-xs font-black uppercase tracking-wider text-[#00AA80]">
+              <span>💬</span> Módulo 5 · Laboratorio en Tiempo Real
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-black text-white tracking-tight mt-2">
+              Playground Interactivo: Prueba tu Chatbot
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-300 mt-1">
+              Experimenta con la lógica que acabamos de diseñar. Si no tienes API Key de OpenAI, usa el <strong class="text-[#00AA80]">Modo Simulado Campuslands</strong> que funciona 100% gratis y sin internet.
+            </p>
+          </div>
+
+          <!-- Selector de Modo -->
+          <div class="bg-[#0D1E38] p-1.5 rounded-2xl border border-[#1E355B] flex items-center gap-1 shrink-0">
+            <button id="mode-offline-btn" onclick="setChatEngine('offline')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition bg-[#00AA80] text-white shadow">
+              🌱 Modo Offline (Gratis)
+            </button>
+            <button id="mode-openai-btn" onclick="setChatEngine('openai')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition text-slate-400 hover:text-white">
+              🔑 OpenAI Real (API Key)
+            </button>
+          </div>
+        </div>
+
+        <!-- Campo Opcional para API Key de OpenAI (oculto por defecto) -->
+        <div id="openai-key-container" class="hidden p-4 bg-[#050D1A] rounded-2xl border border-[#1E355B] space-y-2">
+          <label class="block text-xs font-bold text-slate-300">
+            Ingresa tu OpenAI API Key (sk-...):
+          </label>
+          <div class="flex gap-2">
+            <input type="password" id="user-openai-key" placeholder="sk-proj-..." class="flex-1 px-3 py-2 bg-[#0D1E38] border border-[#1E355B] rounded-xl text-xs font-mono text-white focus:outline-none focus:border-[#2CAAFF]" />
+            <button onclick="saveApiKey()" class="px-4 py-2 bg-[#5E3AE2] hover:bg-[#4728BF] text-white text-xs font-bold rounded-xl transition">
+              Guardar Key
+            </button>
+          </div>
+          <span class="text-[10px] text-slate-500 block">
+            🔒 Tu key solo se guarda en la memoria de tu navegador y nunca sale de tu computadora.
+          </span>
+        </div>
+      </div>
+
+      <!-- Interfaz Dividida: Chat en Vivo + Inspector de Payload JSON -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Columna del Chat (7 columnas) -->
+        <div class="lg:col-span-7 bg-[#08172E] border border-[#1E355B] rounded-3xl p-4 sm:p-6 flex flex-col h-[560px] shadow-2xl relative overflow-hidden">
+          
+          <!-- Barra superior del chat -->
+          <div class="flex items-center justify-between pb-3 border-b border-[#1E355B] mb-3">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-[#5E3AE2] flex items-center justify-center text-white text-sm font-bold shadow-md shadow-purple-500/20">
+                🤖
+              </div>
+              <div>
+                <h4 class="font-bold text-xs sm:text-sm text-white flex items-center gap-1.5">
+                  Tutor IA Campuslands
+                  <span id="active-engine-badge" class="px-2 py-0.5 text-[9px] font-mono uppercase font-black bg-[#00AA80]/20 text-[#00AA80] rounded">
+                    Simulado
+                  </span>
+                </h4>
+                <p class="text-[10px] text-slate-400">En línea y listo para ayudarte</p>
+              </div>
+            </div>
+
+            <button onclick="clearChatHistory()" class="px-2.5 py-1 bg-[#0D1E38] hover:bg-rose-950/40 text-slate-400 hover:text-rose-300 text-[11px] font-semibold rounded-lg border border-[#1E355B] transition flex items-center gap-1" title="Limpiar historial">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              <span>Limpiar</span>
+            </button>
+          </div>
+
+          <!-- Caja de Mensajes con Scroll -->
+          <div id="live-chat-messages" class="flex-1 overflow-y-auto pr-2 space-y-3 scrollbar-thin">
+            <!-- Mensaje Inicial de Bienvenida -->
+            <div class="flex items-start gap-2.5 max-w-[85%]">
+              <div class="w-6 h-6 rounded-md bg-[#5E3AE2] flex items-center justify-center text-xs shrink-0 mt-0.5">🤖</div>
+              <div class="p-3.5 rounded-2xl bg-[#0D1E38] border border-[#1E355B] text-xs text-slate-200 leading-relaxed shadow-sm">
+                ¡Hola camper! 🚀 Soy tu bot educativo. Pregúntame sobre <strong class="text-[#2CAAFF]">JavaScript</strong>, qué es un <strong class="text-[#2CAAFF]">Embedding</strong>, cómo funciona la <strong class="text-[#F4B422]">Atención</strong> o pídeme un ejemplo de código.
+              </div>
+            </div>
+          </div>
+
+          <!-- Indicador de "Escribiendo..." -->
+          <div id="typing-indicator" class="hidden py-2 px-3 text-[11px] text-slate-400 flex items-center gap-2">
+            <span class="flex gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-[#2CAAFF] animate-bounce"></span>
+              <span class="w-1.5 h-1.5 rounded-full bg-[#5E3AE2] animate-bounce [animation-delay:0.2s]"></span>
+              <span class="w-1.5 h-1.5 rounded-full bg-[#00AA80] animate-bounce [animation-delay:0.4s]"></span>
+            </span>
+            <span>El tutor está formulando la respuesta...</span>
+          </div>
+
+          <!-- Formulario de Entrada -->
+          <form id="live-chat-form" class="pt-3 border-t border-[#1E355B] flex gap-2" onsubmit="handleLiveChatSubmit(event)">
+            <input type="text" id="live-user-input" placeholder="Escribe un mensaje para probar el bot..." autocomplete="off" class="flex-1 px-4 py-2.5 bg-[#050D1A] border border-[#1E355B] rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#5E3AE2] transition" />
+            <button type="submit" id="live-btn-send" class="px-5 py-2.5 bg-[#5E3AE2] hover:bg-[#4728BF] text-white font-bold text-xs rounded-xl transition flex items-center gap-1.5 shadow-md shadow-purple-500/25">
+              <span>Enviar</span>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            </button>
+          </form>
+
+        </div>
+
+        <!-- Columna del Inspector JSON (5 columnas) -->
+        <div class="lg:col-span-5 bg-[#08172E] border border-[#1E355B] rounded-3xl p-4 sm:p-6 flex flex-col h-[560px] shadow-2xl">
+          <div class="flex items-center justify-between pb-3 border-b border-[#1E355B] mb-3">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-mono font-bold text-[#F4B422] uppercase">Inspector HTTP</span>
+              <span class="text-[10px] text-slate-400">Payload en tiempo real</span>
+            </div>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-[#050D1A] border border-[#1E355B] text-slate-300">
+              POST /v1/chat/completions
+            </span>
+          </div>
+
+          <p class="text-xs text-slate-400 mb-2">
+            Esto es exactamente lo que viaja en el <code class="text-[#2CAAFF]">body</code> de tu petición cada vez que presionas Enviar:
+          </p>
+
+          <div class="flex-1 bg-[#050D1A] rounded-2xl border border-[#1E355B] p-4 overflow-y-auto font-mono text-[11px] leading-relaxed text-slate-300 scrollbar-thin">
+            <pre id="json-payload-display" class="text-[#2CAAFF]">{
+  "model": "gpt-4o-mini",
+  "temperature": 0.7,
+  "messages": [
+    {
+      "role": "system",
+      "content": "Eres el Tutor Virtual de Campuslands..."
+    }
+  ]
+}</pre>
+          </div>
+
+          <div class="mt-3 p-3 bg-[#0D1E38] rounded-xl border border-[#1E355B] text-[11px] text-slate-400">
+            📊 <strong class="text-white">Mensajes en memoria activa:</strong> <span id="messages-count-badge" class="text-[#2CAAFF] font-bold">1</span>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- MÓDULO 6: MISIONES Y RETOS (GAMIFICACIÓN) -->
+    <!-- ========================================== -->
+    <section id="module-6" class="module-content hidden space-y-8 animate-fadeIn">
+      
+      <!-- Banner de Retos -->
+      <div class="bg-[#08172E] border border-[#1E355B] rounded-3xl p-8 space-y-4">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F4B422]/20 border border-[#F4B422]/50 text-xs font-black uppercase tracking-wider text-[#F4B422]">
+          <span>🏆</span> Módulo 6 · Misiones para Campers
+        </div>
+        <h2 class="text-2xl sm:text-4xl font-black text-white tracking-tight">
+          ¡Tu Turno de Programar! Misiones de Código
+        </h2>
+        <p class="text-slate-300 text-sm sm:text-base leading-relaxed max-w-4xl">
+          El verdadero aprendizaje ocurre cuando modificas el código y rompes cosas para mejorarlas. 
+          Aquí tienes 3 retos prácticos para llevar tu chatbot al siguiente nivel. Marca las misiones que vayas completando:
+        </p>
+      </div>
+
+      <!-- Las 3 Misiones -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- Misión 1 -->
+        <div class="bg-[#08172E] border border-[#1E355B] rounded-2xl p-6 flex flex-col justify-between space-y-4 relative overflow-hidden group hover:border-[#5E3AE2] transition">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider bg-[#5E3AE2]/20 text-[#2CAAFF] rounded-md border border-[#5E3AE2]/40">
+                Misión 01 · Prompting
+              </span>
+              <span class="text-lg">🧙‍♂️</span>
+            </div>
+            <h3 class="text-base font-bold text-white">El Tutor "Yoda" de Campuslands</h3>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              Modifica el mensaje con <code class="text-[#2CAAFF]">role: "system"</code> para que el bot hable exactamente como el maestro Yoda, aconsejando a los campers sobre código limpio y paciencia con los bugs.
+            </p>
+            <div class="p-2.5 bg-[#050D1A] rounded-xl font-mono text-[11px] text-slate-400">
+              "Joven padawan, punto y coma olvidado tú has..."
+            </div>
+          </div>
+
+          <label class="flex items-center gap-2.5 p-3 bg-[#0D1E38] rounded-xl border border-[#1E355B] cursor-pointer hover:bg-[#1E355B]/40 transition">
+            <input type="checkbox" onchange="toggleMission(1, this.checked)" class="w-4 h-4 rounded text-[#5E3AE2] bg-[#050D1A] border-slate-600 focus:ring-0" id="mission-check-1" />
+            <span class="text-xs font-semibold text-slate-200">¡Misión 1 Completada!</span>
+          </label>
+        </div>
+
+        <!-- Misión 2 -->
+        <div class="bg-[#08172E] border border-[#1E355B] rounded-2xl p-6 flex flex-col justify-between space-y-4 relative overflow-hidden group hover:border-[#2CAAFF] transition">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider bg-[#2CAAFF]/20 text-[#2CAAFF] rounded-md border border-[#2CAAFF]/40">
+                Misión 02 · DOM & Eventos
+              </span>
+              <span class="text-lg">🧹</span>
+            </div>
+            <h3 class="text-base font-bold text-white">Botón "Reiniciar Conversación"</h3>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              Agrega un botón en el HTML que al hacer clic limpie el contenedor de mensajes con <code class="text-[#2CAAFF]">innerHTML = ''</code> y restablezca el array <code class="text-[#2CAAFF]">historial</code> a solo su prompt de sistema original.
+            </p>
+            <div class="p-2.5 bg-[#050D1A] rounded-xl font-mono text-[11px] text-slate-400">
+              historial.length = 1; // Solo deja el system prompt
+            </div>
+          </div>
+
+          <label class="flex items-center gap-2.5 p-3 bg-[#0D1E38] rounded-xl border border-[#1E355B] cursor-pointer hover:bg-[#1E355B]/40 transition">
+            <input type="checkbox" onchange="toggleMission(2, this.checked)" class="w-4 h-4 rounded text-[#2CAAFF] bg-[#050D1A] border-slate-600 focus:ring-0" id="mission-check-2" />
+            <span class="text-xs font-semibold text-slate-200">¡Misión 2 Completada!</span>
+          </label>
+        </div>
+
+        <!-- Misión 3 -->
+        <div class="bg-[#08172E] border border-[#1E355B] rounded-2xl p-6 flex flex-col justify-between space-y-4 relative overflow-hidden group hover:border-[#00AA80] transition">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider bg-[#00AA80]/20 text-[#00AA80] rounded-md border border-[#00AA80]/40">
+                Misión 03 · UX & Validación
+              </span>
+              <span class="text-lg">⏳</span>
+            </div>
+            <h3 class="text-base font-bold text-white">Efecto "Escribiendo..."</h3>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              Muestra una burbuja temporal de carga mientras la promesa del <code class="text-[#00AA80]">fetch</code> está pendiente, y desactiva el botón de envío para evitar peticiones duplicadas accidentales.
+            </p>
+            <div class="p-2.5 bg-[#050D1A] rounded-xl font-mono text-[11px] text-slate-400">
+              btnSend.disabled = true; // Bloquea reenvíos
+            </div>
+          </div>
+
+          <label class="flex items-center gap-2.5 p-3 bg-[#0D1E38] rounded-xl border border-[#1E355B] cursor-pointer hover:bg-[#1E355B]/40 transition">
+            <input type="checkbox" onchange="toggleMission(3, this.checked)" class="w-4 h-4 rounded text-[#00AA80] bg-[#050D1A] border-slate-600 focus:ring-0" id="mission-check-3" />
+            <span class="text-xs font-semibold text-slate-200">¡Misión 3 Completada!</span>
+          </label>
+        </div>
+
+      </div>
+
+      <!-- Resumen Final y Felicitaciones -->
+      <div class="p-6 bg-gradient-to-r from-[#08172E] via-[#0D1E38] to-[#08172E] rounded-3xl border border-[#1E355B] flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div class="space-y-1 text-center sm:text-left">
+          <h4 class="text-lg font-bold text-white">¿Completaste el Laboratorio?</h4>
+          <p class="text-xs text-slate-400">Comparte tu repositorio en el canal de Campuslands y ayuda a tus compañeros.</p>
+        </div>
+        <a href="https://github.com/anndreloopez012/campuslands-ia-embeddings-chat-javascript" target="_blank" rel="noopener noreferrer" class="px-6 py-3 bg-[#5E3AE2] hover:bg-[#4728BF] text-white font-bold text-xs rounded-xl transition flex items-center gap-2 shadow-xl shadow-purple-500/25">
+          <span>⭐ Ver Repositorio en GitHub</span>
+        </a>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- FOOTER OFICIAL -->
+  <footer class="mt-auto border-t border-[#1E355B]/70 bg-[#050D1A] py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+      <div class="flex items-center gap-2">
+        <span class="font-extrabold text-white">Campuslands IA Academy</span>
+        <span>• Formación Tech con Propósito</span>
+      </div>
+      <div class="flex items-center gap-4 text-slate-500">
+        <span>Desarrollado para estudiantes de JavaScript</span>
+        <span>•</span>
+        <span class="text-[#2CAAFF]">Hecho con amor para la comunidad</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast Notification para botón de copiar -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 px-4 py-2.5 bg-[#5E3AE2] text-white font-bold text-xs rounded-xl shadow-2xl flex items-center gap-2 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <span>✅</span>
+    <span id="toast-msg">¡Copiado al portapapeles!</span>
+  </div>
+
+  <!-- SCRIPT PRINCIPAL DE LA APLICACIÓN -->
+  <script src="app.js"></script>
+</body>
+</html>
